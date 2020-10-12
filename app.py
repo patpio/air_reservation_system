@@ -6,8 +6,8 @@ class Flight:
         self.airplane = airplane
         self.flight_number = flight_number
 
-        rows, seats = self.airplane.seating_plan()
-        self.seating_plan = [None] + [{seat: None for seat in seats} for _ in rows]
+        self.rows, self.seats = self.airplane.seating_plan()
+        self.seating_plan = [None] + [{seat: None for seat in self.seats} for _ in self.rows]
 
     def get_airlines(self):
         return self.flight_number[:2]
@@ -19,9 +19,8 @@ class Flight:
         return self.airplane.get_name()
 
     def _parse_seat(self, seat):
-        rows, seats = self.airplane.seating_plan()
         letter = seat[-1]
-        if letter not in seats:
+        if letter not in self.seats:
             raise ValueError(f'Invalid seat letter {letter}')
 
         row_text = seat[:-1]
@@ -31,24 +30,26 @@ class Flight:
         except ValueError:
             raise ValueError(f'Invalid row number {row_text}')
 
-        if row not in rows:
+        if row not in self.rows:
             raise ValueError(f'Row number is out of range {row}')
 
         return row, letter
 
+    def check_place(self, row, letter, seat):
+        if self.seating_plan[row][letter] is not None:
+            raise ValueError(f'Seat {seat} is already taken')
+
     def allocate_passenger(self, passenger='Pat P', seat='12C'):
         row, letter = self._parse_seat(seat)
 
-        if self.seating_plan[row][letter] is not None:
-            raise ValueError(f'Seat {seat} is already taken')
+        self.check_place(row, letter, seat)
         self.seating_plan[row][letter] = passenger
 
     def relocate_passenger(self, seat_from, seat_to):
         row_old, letter_old = self._parse_seat(seat_from)
         row_new, letter_new = self._parse_seat(seat_to)
 
-        if self.seating_plan[row_new][letter_new] is not None:
-            raise ValueError(f'Seat {seat_to} is already taken')
+        self.check_place(row_new, letter_new, seat_to)
         self.seating_plan[row_new][letter_new] = self.seating_plan[row_old][letter_old]
         self.seating_plan[row_old][letter_old] = None
 
@@ -94,6 +95,6 @@ f = Flight('BA123', Boeing737())
 f.allocate_passenger('Lech', '1A')
 f.allocate_passenger("Jarek K", '24B')
 f.allocate_passenger("Krzysztof Jarzyna", '13B')
-f.relocate_passenger('13B','13A')
-f.relocate_passenger('13A','1B')
+f.relocate_passenger('13B', '13A')
+f.relocate_passenger('13A', '1B')
 pprint(f.seating_plan)
