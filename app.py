@@ -7,7 +7,7 @@ class Flight:
         self.flight_number = flight_number
 
         rows, seats = self.airplane.seating_plan()
-        self.seating_plan = [None]+[{seat: None for seat in seats} for _ in rows]
+        self.seating_plan = [None] + [{seat: None for seat in seats} for _ in rows]
 
     def get_airlines(self):
         return self.flight_number[:2]
@@ -18,16 +18,16 @@ class Flight:
     def get_airplane_model(self):
         return self.airplane.get_name()
 
-    def _parse_seat(self,seat):
+    def _parse_seat(self, seat):
         rows, seats = self.airplane.seating_plan()
         letter = seat[-1]
         if letter not in seats:
             raise ValueError(f'Invalid seat letter {letter}')
 
-        row_text=seat[:-1]
+        row_text = seat[:-1]
 
         try:
-            row=int(row_text)
+            row = int(row_text)
         except ValueError:
             raise ValueError(f'Invalid row number {row_text}')
 
@@ -37,15 +37,20 @@ class Flight:
         return row, letter
 
     def allocate_passenger(self, passenger='Pat P', seat='12C'):
-        row, letter =self._parse_seat(seat)
+        row, letter = self._parse_seat(seat)
 
         if self.seating_plan[row][letter] is not None:
-            raise ValueError(f'Seat is already taken {seat}')
+            raise ValueError(f'Seat {seat} is already taken')
         self.seating_plan[row][letter] = passenger
 
     def relocate_passenger(self, seat_from, seat_to):
-        pass
+        row_old, letter_old = self._parse_seat(seat_from)
+        row_new, letter_new = self._parse_seat(seat_to)
 
+        if self.seating_plan[row_new][letter_new] is not None:
+            raise ValueError(f'Seat {seat_to} is already taken')
+        self.seating_plan[row_new][letter_new] = self.seating_plan[row_old][letter_old]
+        self.seating_plan[row_old][letter_old] = None
 
 
 class Airplane:
@@ -89,5 +94,6 @@ f = Flight('BA123', Boeing737())
 f.allocate_passenger('Lech', '1A')
 f.allocate_passenger("Jarek K", '24B')
 f.allocate_passenger("Krzysztof Jarzyna", '13B')
-
+f.relocate_passenger('13B','13A')
+f.relocate_passenger('13A','1B')
 pprint(f.seating_plan)
