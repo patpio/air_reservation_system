@@ -47,11 +47,38 @@ class Flight:
 
     def relocate_passenger(self, seat_from, seat_to):
         row_old, letter_old = self._parse_seat(seat_from)
+
+        if self.seating_plan[row_old][letter_old] is None:
+            raise ValueError(f'Seat {seat_from} is not taken')
+
         row_new, letter_new = self._parse_seat(seat_to)
 
         self.check_place(row_new, letter_new, seat_to)
         self.seating_plan[row_new][letter_new] = self.seating_plan[row_old][letter_old]
         self.seating_plan[row_old][letter_old] = None
+
+    def num_empty_seats(self):
+        return sum(sum(1 for seat in row.values() if seat is None) for row in self.seating_plan if row is not None)
+
+    def print_cards(self, printer):
+        passengers = self.get_passengers()
+
+        for passenger, seat in passengers:
+            printer(passenger, seat, self.get_airplane_model(), self.flight_number)
+
+    def get_passengers(self):
+        passengers = []
+
+        rows, letters = self.airplane.seating_plan()
+
+        for row in rows:
+            for letter in letters:
+                passenger = self.seating_plan[row][letter]
+                if passenger is not None:
+                    passenger_data = passenger, f'{row}{letter}'
+                    passengers.append(passenger_data)
+
+        return passengers
 
 
 class Airplane:
@@ -80,6 +107,15 @@ class AirbusA370(Airplane):
         return range(1, 40), 'ABCDEGHJK'
 
 
+def card_printer(name, seat, plane_model, flight_number):
+    text = f'| Pasazer: {name}, Siedzenie: {seat}, Model: {plane_model}, FN: {flight_number} |'
+    frame = f'+{"-" * (len(text) - 2)}"+"'
+    empty_frame = f'|{"-" * (len(text) - 2)}|'
+    border = [frame, empty_frame, text, empty_frame, frame]
+    border_text = '\n'.join(border)
+    print(border_text)
+
+
 b = Boeing737()
 a = AirbusA370()
 
@@ -97,4 +133,6 @@ f.allocate_passenger("Jarek K", '24B')
 f.allocate_passenger("Krzysztof Jarzyna", '13B')
 f.relocate_passenger('13B', '13A')
 f.relocate_passenger('13A', '1B')
-pprint(f.seating_plan)
+# pprint(f.seating_plan)
+# print(f.num_empty_seats())
+f.print_cards(card_printer)  # card printer - parametr dlatego bez nawiasow
