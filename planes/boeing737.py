@@ -3,7 +3,7 @@ from airplane import Airplane
 
 class Boeing737(Airplane):
     @staticmethod
-    def get_name():  # static method bez self
+    def get_name():
         return 'Boeing 737'
 
     @staticmethod
